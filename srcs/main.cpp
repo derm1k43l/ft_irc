@@ -21,7 +21,7 @@ int main(int ac, char *av[])
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << e.what() << std::endl;
         return 1;
     }
 
@@ -31,7 +31,16 @@ int main(int ac, char *av[])
         std::cerr << "Password cannot be empty\n";
         return 1;
     }
-
+    try
+    {
+        Server server(port, password);
+        server.start();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "Server error: " << e.what() << std::endl;
+    }
+    
     std::cout << "Port: " << port << " Password: " << password << std::endl;
 
 
