@@ -1,3 +1,4 @@
 ircserv
 obj/*
 *.o
+.vscode/settings.json
