@@ -7,7 +7,7 @@ SRCDIR = srcs
 INCDIR = inc
 OBJDIR = obj
 
-SRCS = $(SRCDIR)/main.cpp
+SRCS = $(wildcard $(SRCDIR)/*.cpp)
 OBJS = $(SRCS:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 
 GREEN=\033[0;32m
