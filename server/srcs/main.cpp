@@ -1,5 +1,4 @@
 #include "irc.hpp"
-#include "client.hpp"
 #include "server.hpp"
 #include <iostream>
 

@@ -40,7 +40,7 @@ void Server::stop()
 
     for (auto& client : clients_)
     {
-        close(client->getFd()); // we need a getter for fd in client
+        // close(client->getFd()); // we need a getter for fd in client
         delete client;
     }
     clients_.clear();
@@ -130,6 +130,20 @@ void Server::createServerSocket()
 
 void Server::handleNewConnection()
 {
+    sockaddr_in client_addr = {};
+    socklen_t client_addr_len = sizeof(client_addr);
+
+    int client_fd = accept(server_socket_, (struct sockaddr*)&client_addr, &client_addr_len);
+    if (client_fd == -1)
+    {
+        throw std::runtime_error("Failed to accept connection: " + std::string(strerror(errno)));
+        return; // or?
+    }
+    pollfd client_pollfd = {client_fd, POLLIN, 0};
+    pollfds_.push_back(client_pollfd);
+
+    // for not we store clein
+    clients_.push_back(new Client(client_fd, client_addr));
 
     std::cout << "New connection handled" << std::endl;
 }
@@ -137,10 +151,48 @@ void Server::handleNewConnection()
 
 void Server::handleClientData(int fd)
 {
-    std::cout << "Client data handled" << std::endl;
+    char buffer[1024] = {};
+
+    ssize_t bytes_read = recv(fd, buffer, sizeof(buffer), 0);
+    if (bytes_read == -1)
+    {
+        throw std::runtime_error("Failed to read from client: " + std::string(strerror(errno)));
+        handleClientDisconnection(fd);
+    }
+
+    buffer[bytes_read] = '\0';
+    std::string message(buffer);
+
+    std::cout << "Message from client " << fd << ": " << message << std::endl;
+
+    // echo message back to client test
+    send(fd, message.c_str(), message.size(), 0);
 }
 
-handle Server::ClientDisconnection(int fd)
+void Server::handleClientDisconnection(int fd)
 {
+    close(fd);
+
+    // remove client from pollfds_
+    for (auto it = pollfds_.begin(); it != pollfds_.end(); it++)
+    {
+        if (it->fd == fd)
+        {
+            pollfds_.erase(it);
+            break;
+        }
+    }
+
+    //remove client from clients_
+    for (auto it = clients_.begin(); it != clients_.end(); it++)
+    {
+        if ((*it)->getFd() == fd)
+        {
+            delete *it;
+            clients_.erase(it);
+            break;
+        }
+    }
+
     std::cout << "Client disconnection handled" << std::endl;
 }
